@@ -7,7 +7,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyBzX78p8wYFZH_98nWePccs_rYnaWXgIdM",
     authDomain: "regu-rajawali-1.firebaseapp.com",
-    databaseURL: "https://regu-rajawali-1-default-rtdb.firebaseio.com",
+    databaseURL: "https://regu-rajawali-1-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "regu-rajawali-1",
     storageBucket: "regu-rajawali-1.firebasestorage.app",
     messagingSenderId: "1050547596477",
