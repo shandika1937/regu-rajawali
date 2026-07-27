@@ -387,14 +387,40 @@
         const galleryImages = getGalleryImages();
         const visitors = parseInt(localStorage.getItem('rajawali_visitors') || '0');
         const storageUsed = estimateStorageUsage();
+        
+        // Firebase status
+        const isFirebaseOn = window.FirebaseStats && window.FirebaseStats.isAvailable && window.FirebaseStats.isAvailable();
 
         container.innerHTML = `
             <div class="admin-section-title"><i class="fas fa-chart-bar"></i> Statistik Website</div>
+            
+            <!-- Firebase Status -->
+            <div class="admin-firebase-status" style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:12px;margin-bottom:20px;
+                ${isFirebaseOn ? 'background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);' : 'background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);'}">
+                <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+                    ${isFirebaseOn ? 'background:rgba(16,185,129,0.12);color:#10b981;' : 'background:rgba(245,158,11,0.12);color:#f59e0b;'}">
+                    <i class="fas ${isFirebaseOn ? 'fa-database' : 'fa-exclamation-triangle'}"></i>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-weight:600;font-size:0.9rem;">${isFirebaseOn ? 'Firebase Realtime Database Online' : 'Firebase Belum Dikonfigurasi'}</div>
+                    <div style="font-size:0.8rem;color:var(--text-secondary);">
+                        ${isFirebaseOn 
+                            ? 'Data statistik realtime tersinkron ke semua pengunjung' 
+                            : 'Menggunakan localStorage. <a href="#" onclick="showFirebaseSetup();return false;" style="color:#00d4ff;text-decoration:underline;">Klik di sini untuk panduan setup</a>'
+                        }
+                    </div>
+                </div>
+                <button onclick="window.FirebaseStats && FirebaseStats.refresh(); loadAdminStats();" 
+                        style="padding:8px 14px;border-radius:8px;border:1px solid var(--glass-border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:0.8rem;">
+                    <i class="fas fa-sync"></i>
+                </button>
+            </div>
+
             <div class="admin-stats-grid">
                 <div class="admin-stat-box">
                     <div class="admin-stat-icon blue"><i class="fas fa-user-check"></i></div>
                     <div class="admin-stat-value">${photoCount}/8</div>
-                    <div class="admin-stat-label">Foto Anggota Terupload</div>
+                    <div class="admin-stat-label">Foto Anggota</div>
                 </div>
                 <div class="admin-stat-box">
                     <div class="admin-stat-icon gold"><i class="fas fa-images"></i></div>
@@ -403,20 +429,29 @@
                 </div>
                 <div class="admin-stat-box">
                     <div class="admin-stat-icon purple"><i class="fas fa-eye"></i></div>
-                    <div class="admin-stat-value">${visitors.toLocaleString()}</div>
+                    <div class="admin-stat-value" id="admin-visitor-count">${visitors.toLocaleString()}</div>
                     <div class="admin-stat-label">Total Pengunjung</div>
                 </div>
                 <div class="admin-stat-box">
                     <div class="admin-stat-icon green"><i class="fas fa-database"></i></div>
                     <div class="admin-stat-value">${storageUsed}</div>
-                    <div class="admin-stat-label">Penyimpanan Terpakai</div>
+                    <div class="admin-stat-label">Penyimpanan</div>
                 </div>
             </div>
+
             <div class="admin-warning">
                 <i class="fas fa-info-circle"></i>
-                <span>Foto disimpan di localStorage browser. Untuk penyimpanan permanen, upload file ke folder <code>assets/images/</code>.</span>
+                <span>Foto disimpan di localStorage browser. Untuk penyimpanan permanen, upload file ke folder <code>assets/images/</code>. Statistik realtime membutuhkan Firebase.</span>
             </div>
         `;
+
+        // Update visitor count in realtime if Firebase is on
+        if (isFirebaseOn && window.FirebaseStats) {
+            window.FirebaseStats.getVisitors((count) => {
+                const el = document.getElementById('admin-visitor-count');
+                if (el) el.textContent = count.toLocaleString();
+            });
+        }
     }
 
     function estimateStorageUsage() {

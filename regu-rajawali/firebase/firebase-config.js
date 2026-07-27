@@ -1,6 +1,9 @@
-// ===== REGU RAJAWALI 1 - Firebase Configuration =====
-// Firebase Realtime Database for visitor stats and online tracking
+// ===== REGU RAJAWALI 1 - Firebase Realtime Database =====
+// Konfigurasi untuk statistik realtime (pengunjung, online, dll)
+// Otomatis fallback ke localStorage jika Firebase tidak dikonfigurasi
 
+// ========== 1. ISI FIREBASE CONFIG ANDA DI SINI ==========
+// Cara dapatkan: https://console.firebase.google.com > Project Settings > General > Your apps > Web app > Config
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -11,117 +14,235 @@ const firebaseConfig = {
     appId: "YOUR_APP_ID"
 };
 
-// Firebase app initialization
+// ========== FIREBASE STATUS ==========
 let firebaseApp = null;
 let firebaseDatabase = null;
-let firebaseInitialized = false;
+let firebaseAvailable = false; // Set ke true jika Firebase siap
 
+// ========== CEK APAKAH FIREBASE SUDAH DIKONFIGURASI ==========
+function isFirebaseConfigured() {
+    return firebaseConfig.apiKey !== "YOUR_API_KEY" && 
+           firebaseConfig.projectId !== "YOUR_PROJECT" &&
+           firebaseConfig.databaseURL !== "https://YOUR_PROJECT-default-rtdb.firebaseio.com";
+}
+
+// ========== INITIALISASI FIREBASE ==========
 function initFirebase() {
-    // Check if Firebase SDK is loaded
+    // Cek apakah Firebase SDK sudah diload
     if (typeof firebase === 'undefined') {
-        console.warn('Firebase SDK not loaded. Using localStorage fallback.');
-        return false;
+        console.warn('⚠️ Firebase SDK tidak ditemukan. Menggunakan localStorage fallback.');
+        firebaseAvailable = false;
+        return firebaseAvailable;
+    }
+
+    // Cek apakah konfigurasi sudah diisi
+    if (!isFirebaseConfigured()) {
+        console.warn('⚠️ Firebase belum dikonfigurasi. Isi firebaseConfig di firebase-config.js');
+        console.log('📋 Cara: https://console.firebase.google.com > Project Settings > Web App > Config');
+        firebaseAvailable = false;
+        return firebaseAvailable;
     }
 
     try {
-        // Check if config has been customized
-        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-            console.warn('Firebase not configured. Using localStorage fallback.');
-            return false;
-        }
-
-        // Initialize Firebase
-        if (!firebase.apps.length) {
+        // Initialize Firebase (cegah double init)
+        if (!firebase.apps || !firebase.apps.length) {
             firebaseApp = firebase.initializeApp(firebaseConfig);
         } else {
             firebaseApp = firebase.app();
         }
 
         firebaseDatabase = firebaseApp.database();
-        firebaseInitialized = true;
+        firebaseAvailable = true;
         
-        console.log('Firebase initialized successfully');
+        console.log('✅ Firebase Realtime Database siap!');
+        console.log(`📊 Project: ${firebaseConfig.projectId}`);
+        
         return true;
     } catch (error) {
-        console.warn('Firebase initialization failed:', error);
+        console.error('❌ Firebase init gagal:', error);
+        firebaseAvailable = false;
         return false;
     }
 }
 
-// Update visitor count in Firebase
-function updateFirebaseVisitorCount() {
-    if (!firebaseInitialized || !firebaseDatabase) return;
+// ========== REALTIME DATABASE RULES (untuk Firebase console) ==========
+/*
+Copy rules ini ke Firebase Console > Realtime Database > Rules:
 
-    const visitorRef = firebaseDatabase.ref('stats/visitors');
-    
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "visitors": {
+      ".validate": "newData.isNumber()"
+    },
+    "sessions": {
+      "$session_id": {
+        ".validate": "newData.hasChildren(['timestamp'])",
+        "timestamp": { ".validate": "newData.isNumber()" },
+        "userAgent": { ".validate": "newData.isString()" }
+      },
+      ".indexOn": ["timestamp"]
+    }
+  }
+}
+*/
+
+// ========== VISITOR COUNTER ==========
+function updateVisitorCount() {
+    if (!firebaseAvailable || !firebaseDatabase) {
+        // Fallback: localStorage
+        let count = parseInt(localStorage.getItem('rajawali_visitors') || '0');
+        count++;
+        localStorage.setItem('rajawali_visitors', count.toString());
+        return count;
+    }
+
+    // Firebase: gunakan transaction untuk atomic increment
+    const visitorRef = firebaseDatabase.ref('visitors/count');
     visitorRef.transaction((current) => {
         return (current || 0) + 1;
     });
+
+    return null; // Akan di-update via callback
 }
 
-// Get visitor count from Firebase (with localStorage fallback)
-function getFirebaseVisitorCount(callback) {
-    if (!firebaseInitialized || !firebaseDatabase) {
-        // Fallback to localStorage
+function getVisitorCount(callback) {
+    if (!firebaseAvailable || !firebaseDatabase) {
         const count = parseInt(localStorage.getItem('rajawali_visitors') || '0');
         callback(count);
         return;
     }
 
-    const visitorRef = firebaseDatabase.ref('stats/visitors');
-    visitorRef.once('value').then((snapshot) => {
+    // Firebase: realtime listener
+    const visitorRef = firebaseDatabase.ref('visitors/count');
+    visitorRef.on('value', (snapshot) => {
         const count = snapshot.val() || 0;
         callback(count);
-    }).catch(() => {
+    }, (error) => {
+        console.warn('Firebase read error:', error);
         const count = parseInt(localStorage.getItem('rajawali_visitors') || '0');
         callback(count);
     });
 }
 
-// Update online status
-function updateOnlineStatus() {
-    if (!firebaseInitialized || !firebaseDatabase) return;
+// ========== ONLINE STATUS (SESSION-BASED) ==========
+let sessionRef = null;
+let sessionKeepAlive = null;
 
-    const sessionRef = firebaseDatabase.ref(`sessions/${Date.now()}`);
+function updateOnlineStatus() {
+    if (!firebaseAvailable || !firebaseDatabase) return;
+
+    // Buat session baru
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionRef = firebaseDatabase.ref(`sessions/${sessionId}`);
+
+    // Set session data
     sessionRef.set({
         timestamp: firebase.database.ServerValue.TIMESTAMP,
-        userAgent: navigator.userAgent.substring(0, 100)
+        userAgent: (navigator.userAgent || '').substring(0, 100),
+        online: true
     });
 
-    // Remove after 2 minutes (session timeout)
-    setTimeout(() => {
-        sessionRef.remove();
-    }, 120000);
+    // Update timestamp setiap 30 detik (keep alive)
+    if (sessionKeepAlive) clearInterval(sessionKeepAlive);
+    sessionKeepAlive = setInterval(() => {
+        if (sessionRef) {
+            sessionRef.update({
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+    }, 30000);
+
+    // Hapus session saat page unload
+    window.addEventListener('beforeunload', () => {
+        if (sessionRef) {
+            sessionRef.remove();
+        }
+        if (sessionKeepAlive) {
+            clearInterval(sessionKeepAlive);
+        }
+    });
 }
 
-// Get online count
 function getOnlineCount(callback) {
-    if (!firebaseInitialized || !firebaseDatabase) {
-        callback(Math.floor(Math.random() * 15) + 5);
+    if (!firebaseAvailable || !firebaseDatabase) {
+        // Fallback: random number
+        callback(Math.floor(Math.random() * 12) + 3);
         return;
     }
 
+    // Firebase: hitung session aktif (60 detik terakhir)
     const sessionsRef = firebaseDatabase.ref('sessions');
-    const twoMinutesAgo = Date.now() - 120000;
+    const oneMinuteAgo = Date.now() - 60000;
 
-    sessionsRef.orderByChild('timestamp').startAt(twoMinutesAgo).once('value', (snapshot) => {
+    sessionsRef.orderByChild('timestamp').startAt(oneMinuteAgo).on('value', (snapshot) => {
         let count = 0;
         snapshot.forEach(() => count++);
         callback(count || 1);
-    }).catch(() => {
-        callback(Math.floor(Math.random() * 15) + 5);
+    }, (error) => {
+        console.warn('Firebase online count error:', error);
+        callback(Math.floor(Math.random() * 12) + 3);
     });
 }
 
-// Initialize
+// ========== TOTAL DAYS ACTIVE ==========
+function getDaysActive() {
+    const startDate = new Date('2026-07-01');
+    const today = new Date();
+    const diffTime = Math.abs(today - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(1, diffDays);
+}
+
+// ========== INITIALIZE ==========
+// Coba init Firebase
 initFirebase();
 
-// Export
+// Jika Firebase siap, update visitor & online status
+if (firebaseAvailable) {
+    // Update visitor count di Firebase
+    updateVisitorCount();
+    
+    // Set online status
+    updateOnlineStatus();
+} else {
+    // Fallback: localStorage visitor count
+    let count = parseInt(localStorage.getItem('rajawali_visitors') || '0');
+    count++;
+    localStorage.setItem('rajawali_visitors', count.toString());
+}
+
+// ========== EXPORT API ==========
 window.FirebaseStats = {
+    initialized: firebaseAvailable,
+    
+    // Init
     init: initFirebase,
-    updateVisitors: updateFirebaseVisitorCount,
-    getVisitors: getFirebaseVisitorCount,
+    isConfigured: isFirebaseConfigured,
+    isAvailable: () => firebaseAvailable,
+    
+    // Visitors
+    updateVisitors: updateVisitorCount,
+    getVisitors: getVisitorCount,
+    
+    // Online
     updateOnline: updateOnlineStatus,
     getOnline: getOnlineCount,
-    isReady: () => firebaseInitialized
+    
+    // Days
+    getDaysActive: getDaysActive,
+    
+    // Config (untuk admin panel)
+    getConfig: () => firebaseConfig,
+    
+    // Manual refresh
+    refresh: () => {
+        if (!firebaseAvailable) {
+            initFirebase();
+        }
+    }
 };
+
+console.log('%c🔥 Firebase Stats Module Loaded', 'font-size: 12px; color: #ffd700;');
+console.log(`%c📡 Status: ${firebaseAvailable ? 'ONLINE' : 'FALLBACK (localStorage)'}`, 'font-size: 11px; color: #00d4ff;');
