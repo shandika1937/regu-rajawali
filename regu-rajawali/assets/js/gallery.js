@@ -1,4 +1,5 @@
 // ===== REGU RAJAWALI 1 - Gallery Module =====
+// Mendukung foto dari upload admin panel (localStorage) + default gallery
 
 (function() {
     'use strict';
@@ -13,8 +14,8 @@
 
     if (!galleryGrid) return;
 
-    // Sample gallery data (replace with actual photos)
-    const galleryData = [
+    // Default gallery data (fallback jika belum ada upload)
+    const defaultGalleryData = [
         { src: 'assets/images/gallery/placeholder-1.jpg', title: 'Kebersamaan Regu', subtitle: 'Foto bersama setelah latihan' },
         { src: 'assets/images/gallery/placeholder-2.jpg', title: 'Diskusi Kelompok', subtitle: 'Belajar bersama di kelas' },
         { src: 'assets/images/gallery/placeholder-3.jpg', title: 'Upacara Bendera', subtitle: 'Senin pagi yang penuh semangat' },
@@ -32,6 +33,36 @@
     let itemsPerPage = 6;
     let loadedCount = 0;
 
+    // ========== GET ALL GALLERY IMAGES (admin upload + default) ==========
+    function getAllGalleryImages() {
+        let images = [];
+        
+        // 1. Load admin-uploaded images from localStorage (priority)
+        if (window.AdminPanel && typeof AdminPanel.getGalleryImages === 'function') {
+            const adminImages = AdminPanel.getGalleryImages();
+            if (adminImages && adminImages.length > 0) {
+                adminImages.forEach(img => {
+                    images.push({
+                        src: img.src,
+                        title: img.title,
+                        subtitle: img.subtitle || 'Momen Regu Rajawali 1',
+                        isAdmin: true
+                    });
+                });
+            }
+        }
+
+        // 2. Add default gallery images (as fallback)
+        defaultGalleryData.forEach(img => {
+            images.push({
+                ...img,
+                isAdmin: false
+            });
+        });
+
+        return images;
+    }
+
     // Generate placeholder SVG if image not found
     function generatePlaceholder(index) {
         const colors = ['#00d4ff', '#7c3aed', '#ffd700', '#ff6b6b', '#10b981', '#f59e0b'];
@@ -45,7 +76,7 @@
             </defs>
             <rect width="400" height="300" fill="url(#g${index})"/>
             <text x="200" y="145" text-anchor="middle" fill="${color}" font-size="48">+</text>
-            <text x="200" y="175" text-anchor="middle" fill="${color}" font-size="14" opacity="0.7">Foto Regu Rajawali 1</text>
+            <text x="200" y="175" text-anchor="middle" fill="${color}" font-size="14" opacity="0.7">Klik untuk upload foto</text>
         </svg>`;
         return `data:image/svg+xml,${encodeURIComponent(svg)}`;
     }
@@ -60,17 +91,20 @@
         img.alt = item.title;
         img.loading = 'lazy';
         
-        img.onerror = function() {
-            this.src = generatePlaceholder(index);
-        };
-
-        // Try to load actual image
-        const realImg = new Image();
-        realImg.onload = function() {
+        // If admin uploaded image, use directly (it's base64)
+        if (item.isAdmin && item.src) {
             img.src = item.src;
-            img.classList.remove('img-shimmer');
-        };
-        realImg.src = item.src;
+        } else {
+            // Try to load actual file, fallback to placeholder
+            const realImg = new Image();
+            realImg.onload = function() {
+                img.src = item.src;
+            };
+            realImg.onerror = function() {
+                // Keep placeholder
+            };
+            realImg.src = item.src;
+        }
 
         const overlay = document.createElement('div');
         overlay.className = 'gallery-overlay';
@@ -110,11 +144,13 @@
 
         if (loadedCount >= currentImages.length && loadMoreBtn) {
             loadMoreBtn.style.display = 'none';
+        } else if (loadMoreBtn) {
+            loadMoreBtn.style.display = 'inline-flex';
         }
     }
 
     function initGallery(images) {
-        currentImages = images || galleryData;
+        currentImages = images || getAllGalleryImages();
         loadedCount = 0;
         galleryGrid.innerHTML = '';
         loadMoreItems();
@@ -132,10 +168,9 @@
     function updateLightboxImage() {
         if (!lightboxImg) return;
         const item = currentImages[currentIndex];
-        lightboxImg.src = item.src;
+        lightboxImg.src = item.src || generatePlaceholder(currentIndex);
         lightboxImg.alt = item.title;
         
-        // Try to load actual image, fallback to placeholder
         lightboxImg.onerror = function() {
             this.src = generatePlaceholder(currentIndex);
         };
@@ -151,7 +186,6 @@
         currentIndex = (currentIndex + direction + currentImages.length) % currentImages.length;
         updateLightboxImage();
         
-        // Animate transition
         if (lightboxImg) {
             lightboxImg.style.transform = 'scale(0.95)';
             lightboxImg.style.opacity = '0.5';
@@ -167,14 +201,12 @@
     if (lightboxPrev) lightboxPrev.addEventListener('click', () => navigateLightbox(-1));
     if (lightboxNext) lightboxNext.addEventListener('click', () => navigateLightbox(1));
 
-    // Close on overlay click
     if (lightbox) {
         lightbox.addEventListener('click', (e) => {
             if (e.target === lightbox) closeLightbox();
         });
     }
 
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
         if (!lightbox?.classList.contains('active')) return;
         if (e.key === 'Escape') closeLightbox();
@@ -182,19 +214,33 @@
         if (e.key === 'ArrowRight') navigateLightbox(1);
     });
 
-    // Load more button
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener('click', loadMoreItems);
     }
 
-    // Initialize
+    // ========== REALTIME UPDATES ==========
+    // Listen for gallery updates from admin panel
+    window.addEventListener('adminGalleryUpdated', function() {
+        // Re-initialize gallery with updated images
+        const newImages = getAllGalleryImages();
+        initGallery(newImages);
+    });
+
+    // Also listen for the custom event from admin.js
+    window.addEventListener('galleryUpdated', function() {
+        const newImages = getAllGalleryImages();
+        initGallery(newImages);
+    });
+
+    // ========== INIT ==========
     initGallery();
 
     // Expose for external use
     window.GalleryModule = {
         init: initGallery,
         openLightbox,
-        closeLightbox
+        closeLightbox,
+        refresh: function() { initGallery(getAllGalleryImages()); }
     };
 
 })();

@@ -632,39 +632,66 @@
     <script src="assets/js/chatbot.js"></script>
     <script src="assets/js/gallery.js"></script>
     <script src="assets/js/stats.js"></script>
+    <script src="assets/js/admin.js"></script>
 
     <script>
-        // ========== RENDER MEMBERS ==========
+        // ========== RENDER MEMBERS (with admin photo support) ==========
         document.addEventListener('DOMContentLoaded', function() {
+            renderMembers();
+        });
+
+        function renderMembers() {
             const membersGrid = document.getElementById('members-grid');
-            if (membersGrid && typeof membersData !== 'undefined') {
-                membersData.forEach((member, index) => {
-                    const initials = member.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                    const card = document.createElement('div');
-                    card.className = 'member-card';
-                    card.setAttribute('data-aos', 'fade-up');
-                    card.setAttribute('data-aos-delay', (index * 50).toString());
+            if (!membersGrid || typeof membersData === 'undefined') return;
+            
+            membersGrid.innerHTML = ''; // Clear for re-render
+            
+            membersData.forEach((member, index) => {
+                const initials = member.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                const photoSrc = (typeof getMemberPhotoSrc === 'function') 
+                    ? getMemberPhotoSrc(member) 
+                    : member.photo;
+                const roleText = (typeof getMemberRoleText === 'function')
+                    ? getMemberRoleText(member)
+                    : member.role;
+                const bioText = (typeof getMemberBioText === 'function')
+                    ? getMemberBioText(member)
+                    : member.bio;
                     
-                    card.innerHTML = `
-                        <div class="card-glow"></div>
-                        <div class="card-number">${String(index + 1).padStart(2, '0')}</div>
-                        <div class="member-photo-wrapper">
-                            <img class="member-photo" src="${member.photo}" 
-                                 alt="${member.name}" 
-                                 onerror="this.parentElement.innerHTML='<div class=\\'member-photo-placeholder\\'>${initials}</div>'"
-                                 loading="lazy">
-                        </div>
-                        <div class="member-role">${member.role}</div>
-                        <h3 class="member-name">${member.name}</h3>
-                        <p class="member-bio">${member.bio}</p>
-                        <div class="member-social">
-                            <a href="${member.social.instagram}" title="Instagram"><i class="fab fa-instagram"></i></a>
-                            <a href="${member.social.github}" title="GitHub"><i class="fab fa-github"></i></a>
-                        </div>
-                    `;
-                    membersGrid.appendChild(card);
-                });
+                const card = document.createElement('div');
+                card.className = 'member-card';
+                card.setAttribute('data-aos', 'fade-up');
+                card.setAttribute('data-aos-delay', (index * 50).toString());
+                
+                card.innerHTML = `
+                    <div class="card-glow"></div>
+                    <div class="card-number">${String(index + 1).padStart(2, '0')}</div>
+                    <div class="member-photo-wrapper">
+                        <img class="member-photo" src="${photoSrc}" 
+                             alt="${member.name}" 
+                             onerror="this.parentElement.innerHTML='<div class=\'member-photo-placeholder\'>${initials}</div>'"
+                             loading="lazy">
+                    </div>
+                    <div class="member-role">${roleText}</div>
+                    <h3 class="member-name">${member.name}</h3>
+                    <p class="member-bio">${bioText}</p>
+                    <div class="member-social">
+                        <a href="${member.social.instagram}" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="${member.social.github}" title="GitHub"><i class="fab fa-github"></i></a>
+                    </div>
+                `;
+                membersGrid.appendChild(card);
+            });
+            
+            // Re-init AOS for new elements
+            if (typeof AOS !== 'undefined') {
+                AOS.refresh();
             }
+        }
+
+        // Listen for admin updates to re-render members
+        document.addEventListener('memberPhotoUpdated', function() {
+            renderMembers();
         });
 
         // ========== SCHEDULE RENDERER ==========
