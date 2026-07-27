@@ -5,13 +5,13 @@
 // ========== 1. ISI FIREBASE CONFIG ANDA DI SINI ==========
 // Cara dapatkan: https://console.firebase.google.com > Project Settings > General > Your apps > Web app > Config
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBzX78p8wYFZH_98nWePccs_rYnaWXgIdM",
+    authDomain: "regu-rajawali-1.firebaseapp.com",
+    databaseURL: "https://regu-rajawali-1-default-rtdb.firebaseio.com",
+    projectId: "regu-rajawali-1",
+    storageBucket: "regu-rajawali-1.firebasestorage.app",
+    messagingSenderId: "1050547596477",
+    appId: "1:1050547596477:web:c927b2467b1c195e2f5bd4"
 };
 
 // ========== FIREBASE STATUS ==========
