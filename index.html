@@ -51,8 +51,6 @@
 
     <!-- ===== MAIN CSS ===== -->
     <link rel="stylesheet" href="assets/css/style.css">
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -642,18 +640,17 @@
 
     <script>
         // ========== RENDER MEMBERS (with admin photo support) ==========
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = "none";
+            var ph = document.createElement("div");
+            ph.className = "member-photo-placeholder";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('DOMContentLoaded', function() {
             renderMembers();
         });
-
-        function handlePhotoError(img) {
-            img.onerror = null;
-            img.style.display = 'none';
-            var ph = document.createElement('div');
-            ph.className = 'member-photo-placeholder';
-            ph.textContent = img.alt ? img.alt.substring(0,2) : '??';
-            img.parentElement.appendChild(ph);
-        }
 
         function renderMembers() {
             const membersGrid = document.getElementById('members-grid');
@@ -705,11 +702,27 @@
         }
 
         // Listen for admin updates to re-render members
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = "none";
+            var ph = document.createElement("div");
+            ph.className = "member-photo-placeholder";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('memberPhotoUpdated', function() {
             renderMembers();
         });
 
         // ========== SCHEDULE RENDERER ==========
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = "none";
+            var ph = document.createElement("div");
+            ph.className = "member-photo-placeholder";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('DOMContentLoaded', function() {
             const scheduleBody = document.getElementById('schedule-body');
             const tabs = document.querySelectorAll('.schedule-tab');
@@ -796,7 +809,7 @@
                     .break-row td { color: #d97706; font-weight: 600; }
                     .footer { text-align: center; margin-top: 30px; color: #6b7280; }
                 </style>
-</head>
+                </head>
                 <body>
                     <h1>${scheduleTitle}</h1>
                     ${scheduleHTML}
@@ -832,6 +845,14 @@
         }
 
         // ========== INIT AOS ==========
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = "none";
+            var ph = document.createElement("div");
+            ph.className = "member-photo-placeholder";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof AOS !== 'undefined') {
                 AOS.init({
