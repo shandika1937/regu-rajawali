@@ -152,21 +152,21 @@ echo -e "  ${EMAS}Proses ini butuh beberapa saat. Sabar ya!${NC}"
 echo ""
 
 # Deploy dengan Vercel CLI
-vercel --prod \
-    --name "$project_name" \
-    --yes \
-    --public
+# CATATAN: Vercel CLI 58+ tidak mendukung --public dan --name
+# Nama project sudah diatur di vercel.json
+vercel --prod --yes
 
 DEPLOY_RESULT=$?
 
 echo ""
 if [ $DEPLOY_RESULT -eq 0 ]; then
+    # Ambil URL dari output vercel
     echo -e "${HIJAU}╔══════════════════════════════════════════════════╗${NC}"
     echo -e "${HIJAU}║              ✅  DEPLOY BERHASIL!               ║${NC}"
     echo -e "${HIJAU}╚══════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BOLD}Website kamu sekarang ONLINE!${NC}"
-    echo -e "  🔗 Cek di: ${BIRU}https://${project_name}.vercel.app${NC}"
+    echo -e "  🔗 Cek di: ${BIRU}https://regu-rajawali-1.vercel.app${NC}"
     echo ""
     echo -e "${EMAS}══════════════════════════════════════════════════${NC}"
     echo -e "${BOLD}           🦅  APA YANG BISA DILAKUKAN${NC}"
@@ -185,7 +185,7 @@ if [ $DEPLOY_RESULT -eq 0 ]; then
     echo ""
 
     # Simpan URL ke file
-    echo "https://${project_name}.vercel.app" > deploy-url.txt
+    echo "https://regu-rajawali-1.vercel.app" > deploy-url.txt
     echo -e "${HIJAU}[INFO]${NC} URL disimpan di: deploy-url.txt"
 else
     echo -e "${MERAH}╔══════════════════════════════════════════════════╗${NC}"
@@ -196,9 +196,15 @@ else
     echo -e "  1. Belum login Vercel"
     echo -e "  2. Nama project sudah dipakai orang"
     echo -e "  3. Koneksi internet bermasalah"
+    echo -e "  4. Belum verifikasi email Vercel"
     echo ""
-    echo -e "${BIRU}Coba lagi dengan:${NC}"
-    echo -e "  vercel --prod --name ${project_name} --yes --public"
+    echo -e "${BIRU}Coba manual:${NC}"
+    echo -e "  ${BOLD}vercel --prod --yes${NC}"
+    echo ""
+    echo -e "${BIRU}Atau deploy dari dashboard Vercel:${NC}"
+    echo -e "  1. Buka ${BOLD}https://vercel.com/new${NC}"
+    echo -e "  2. Upload folder ${BOLD}regu-rajawali${NC}"
+    echo -e "  3. Nama project: ${BOLD}regu-rajawali-1${NC}"
 fi
 
 echo ""
