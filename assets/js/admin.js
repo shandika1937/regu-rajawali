@@ -41,7 +41,7 @@ function getMemberPhoto(id, cb) {
     fbRead('members/' + id + '/photo', cb);
 }
 function saveMemberPhoto(id, dataUrl) {
-    saveMemberPhoto('members/' + id + '/photo', dataUrl);
+    fbSave('members/' + id + '/photo', dataUrl);
 }
 
 // ===== MEMBER BIOS =====

@@ -646,6 +646,15 @@
             renderMembers();
         });
 
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = 'none';
+            var ph = document.createElement('div');
+            ph.className = 'member-photo-placeholder';
+            ph.textContent = img.alt ? img.alt.substring(0,2) : '??';
+            img.parentElement.appendChild(ph);
+        }
+
         function renderMembers() {
             const membersGrid = document.getElementById('members-grid');
             if (!membersGrid || typeof membersData === 'undefined') return;
