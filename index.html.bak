@@ -640,6 +640,14 @@
 
     <script>
         // ========== RENDER MEMBERS (with admin photo support) ==========
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = "none";
+            var ph = document.createElement("div");
+            ph.className = "member-photo-placeholder";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('DOMContentLoaded', function() {
             renderMembers();
         });
@@ -673,7 +681,7 @@
                     <div class="member-photo-wrapper">
                         <img class="member-photo" src="${photoSrc}" 
                              alt="${member.name}" 
-                             onerror="this.parentElement.innerHTML='<div class=\'member-photo-placeholder\'>${initials}</div>'"
+                             onerror="handlePhotoError(this)"
                              loading="lazy">
                     </div>
                     <div class="member-role">${roleText}</div>
@@ -694,11 +702,27 @@
         }
 
         // Listen for admin updates to re-render members
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = "none";
+            var ph = document.createElement("div");
+            ph.className = "member-photo-placeholder";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('memberPhotoUpdated', function() {
             renderMembers();
         });
 
         // ========== SCHEDULE RENDERER ==========
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = "none";
+            var ph = document.createElement("div");
+            ph.className = "member-photo-placeholder";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('DOMContentLoaded', function() {
             const scheduleBody = document.getElementById('schedule-body');
             const tabs = document.querySelectorAll('.schedule-tab');
@@ -821,6 +845,14 @@
         }
 
         // ========== INIT AOS ==========
+        function handlePhotoError(img) {
+            img.onerror = null;
+            img.style.display = "none";
+            var ph = document.createElement("div");
+            ph.className = "member-photo-placeholder";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof AOS !== 'undefined') {
                 AOS.init({
