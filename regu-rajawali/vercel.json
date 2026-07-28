@@ -3,7 +3,7 @@
   "name": "regu-rajawali-1",
   "buildCommand": null,
   "outputDirectory": ".",
-  "framework": null,
+  "framework": "static",
   "rewrites": [
     {
       "source": "/(.*)",

@@ -151,16 +151,29 @@ echo -e "${BIRU}[INFO]${NC} Deploy ke Vercel..."
 echo -e "  ${EMAS}Proses ini butuh beberapa saat. Sabar ya!${NC}"
 echo ""
 
+# Hapus project sebelumnya yang namanya salah (kalau ada)
+echo -e "${BIRU}[INFO]${NC} Cek project Vercel yang sudah ada..."
+EXISTING_PROJECT=$(vercel project list --yes 2>/dev/null | grep "regu-rajawali-1" | head -1)
+if [ -z "$EXISTING_PROJECT" ]; then
+    echo -e "${HIJAU}[OK]${NC} Project 'regu-rajawali-1' belum ada, akan dibuat baru."
+else
+    echo -e "${EMAS}[INFO]${NC} Project 'regu-rajawali-1' sudah ada, akan ditimpa."
+fi
+echo ""
+
 # Deploy dengan Vercel CLI
 # CATATAN: Vercel CLI 58+ tidak mendukung --public dan --name
-# Nama project sudah diatur di vercel.json
-vercel --prod --yes
+# Nama project sudah diatur di vercel.json dengan "framework": "static"
+echo -e "${BIRU}[INFO]${NC} Deploy ke Vercel..."
+echo -e "  ${EMAS}Proses ini butuh beberapa saat. Sabar ya!${NC}"
+echo ""
 
-DEPLOY_RESULT=$?
+vercel --prod --yes 2>&1 | tee vercel-deploy.log
+
+DEPLOY_RESULT=${PIPESTATUS[0]}
 
 echo ""
 if [ $DEPLOY_RESULT -eq 0 ]; then
-    # Ambil URL dari output vercel
     echo -e "${HIJAU}╔══════════════════════════════════════════════════╗${NC}"
     echo -e "${HIJAU}║              ✅  DEPLOY BERHASIL!               ║${NC}"
     echo -e "${HIJAU}╚══════════════════════════════════════════════════╝${NC}"
@@ -192,19 +205,19 @@ else
     echo -e "${MERAH}║           ❌  DEPLOY GAGAL!                     ║${NC}"
     echo -e "${MERAH}╚══════════════════════════════════════════════════╝${NC}"
     echo ""
+    echo -e "Cek file ${BOLD}vercel-deploy.log${NC} untuk detail errornya."
+    echo ""
     echo -e "Kemungkinan penyebab:"
-    echo -e "  1. Belum login Vercel"
-    echo -e "  2. Nama project sudah dipakai orang"
-    echo -e "  3. Koneksi internet bermasalah"
-    echo -e "  4. Belum verifikasi email Vercel"
+    echo -e "  1. ${BOLD}Nama project '$project_name' sudah dipakai${NC} orang lain"
+    echo -e "  2. Koneksi internet bermasalah"
+    echo -e "  3. Belum verifikasi email Vercel"
     echo ""
-    echo -e "${BIRU}Coba manual:${NC}"
-    echo -e "  ${BOLD}vercel --prod --yes${NC}"
-    echo ""
-    echo -e "${BIRU}Atau deploy dari dashboard Vercel:${NC}"
-    echo -e "  1. Buka ${BOLD}https://vercel.com/new${NC}"
-    echo -e "  2. Upload folder ${BOLD}regu-rajawali${NC}"
+    echo -e "${BIRU}🔧 CARA ALTERNATIF (via Dashboard Vercel):${NC}"
+    echo -e "  1. Buka ${BOLD}https://vercel.com/new${NC} di browser HP"
+    echo -e "  2. Pilih ${BOLD}Upload${NC} → pilih folder regu-rajawali"
     echo -e "  3. Nama project: ${BOLD}regu-rajawali-1${NC}"
+    echo -e "  4. Framework: ${BOLD}Other${NC}"  
+    echo -e "  5. Klik ${BOLD}Deploy${NC} — selesai! ✅"
 fi
 
 echo ""
