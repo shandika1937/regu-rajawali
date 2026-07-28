@@ -1,68 +1,308 @@
-// Owner Admin Panel - Password: own123
 (function(){
-var STORAGE_KEYS={memberPhotos:'rajawali_member_photos',galleryImages:'rajawali_gallery_images',memberBios:'rajawali_member_bios',memberRoles:'rajawali_member_roles'};
-function gMP(){try{return JSON.parse(localStorage.getItem(STORAGE_KEYS.memberPhotos)||'{}')}catch(e){return{}}}
-function sMP(id,d){var p=gMP();p[id]=d;localStorage.setItem(STORAGE_KEYS.memberPhotos,JSON.stringify(p))}
-function dMP(id){var p=gMP();delete p[id];localStorage.setItem(STORAGE_KEYS.memberPhotos,JSON.stringify(p))}
-function gMPFS(id){return gMP()[id]||null}
-function gME(t){try{return JSON.parse(localStorage.getItem(t)||'{}')}catch(e){return{}}}
-function sME(t,id,v){var e=gME(t);e[id]=v;localStorage.setItem(t,JSON.stringify(e))}
-function gMB(id,d){return gME(STORAGE_KEYS.memberBios)[id]||d}
-function gMR(id,d){return gME(STORAGE_KEYS.memberRoles)[id]||d}
-function gGI(){try{return JSON.parse(localStorage.getItem(STORAGE_KEYS.galleryImages)||'[]')}catch(e){return[]}}
-function aGI(src,t){var imgs=gGI();var item={id:Date.now(),src:src,title:t||'Foto',date:new Date().toISOString()};imgs.unshift(item);localStorage.setItem(STORAGE_KEYS.galleryImages,JSON.stringify(imgs))}
-function dGI(id){var imgs=gGI().filter(function(i){return i.id!==id});localStorage.setItem(STORAGE_KEYS.galleryImages,JSON.stringify(imgs))}
-function showN(msg){var n=document.createElement('div');n.className='admin-notification admin-notification-success';n.innerHTML='<i class="fas fa-check-circle"></i><span>'+msg+'</span>';document.body.appendChild(n);n.classList.add('show');setTimeout(function(){n.remove()},3000)}
-function showAdminPanel(){var p=document.getElementById('admin-panel');if(!p)p=createPanel();p.classList.add('active');document.body.style.overflow='hidden';loadMembers()}
-function hideAdminPanel(){var p=document.getElementById('admin-panel');if(p){p.classList.remove('active');document.body.style.overflow=''}}
-function createPanel(){var p=document.createElement('div');p.id='admin-panel';p.className='admin-panel';p.innerHTML='<div class="admin-overlay"></div><div class="admin-container"><div class="admin-header"><div class="admin-header-left"><div class="admin-logo-icon"><i class="fas fa-crown"></i></div><div><h3>Owner Dashboard</h3></div></div><div class="admin-header-right"><button class="admin-btn-icon" onclick="AdminPanel.logout()"><i class="fas fa-sign-out-alt"></i></button><button class="admin-btn-icon" onclick="AdminPanel.hide()"><i class="fas fa-times"></i></button></div></div><div class="admin-tabs"><button class="admin-tab active" data-tab="members"><i class="fas fa-users"></i> Anggota</button><button class="admin-tab" data-tab="gallery"><i class="fas fa-images"></i> Galeri</button></div><div class="admin-body"><div class="admin-tab-content active" id="admin-members"></div><div class="admin-tab-content" id="admin-gallery"></div></div></div>';document.body.appendChild(p);p.querySelectorAll('.admin-tab').forEach(function(t){t.addEventListener('click',function(){p.querySelectorAll('.admin-tab').forEach(function(x){x.classList.remove('active')});p.querySelectorAll('.admin-tab-content').forEach(function(x){x.classList.remove('active')});t.classList.add('active');var c=document.getElementById('admin-'+t.dataset.tab);if(c){c.classList.add('active');if(t.dataset.tab==='members')loadMembers();else loadGallery()}})});p.querySelector('.admin-overlay').addEventListener('click',hideAdminPanel);return p}
-function loadMembers(){var c=document.getElementById('admin-members');if(!c||typeof membersData==='undefined')return;var h='<div class="admin-section-title"><i class="fas fa-user-edit"></i> Kelola Foto</div><div class="admin-members-grid">';membersData.forEach(function(m){var sp=gMPFS(m.id);var cb=gMB(m.id,m.bio);var cr=gMR(m.id,m.role);h+='<div class="admin-member-card"><div class="admin-member-photo"><img src="'+(sp||m.photo)+'" alt="'+m.name+'" onerror="this.style.display=\'none\'"><div class="admin-photo-overlay" onclick="document.getElementById(\'file-'+m.id+'\').click()"><i class="fas fa-camera"></i><span>Upload</span></div><input type="file" id="file-'+m.id+'" accept="image/*" style="display:none" onchange="AdminPanel.uploadMemberPhoto('+m.id+',this)"></div><div class="admin-member-info"><h4>'+m.name+'</h4><div class="admin-field"><label>Jabatan</label><input value="'+cr+'" onchange="AdminPanel.updateMemberRole('+m.id+',this.value)"></div><div class="admin-field"><label>Bio</label><textarea rows="2" onchange="AdminPanel.updateMemberBio('+m.id+',this.value)">'+cb+'</textarea></div></div></div>'});h+='</div>';c.innerHTML=h}
-function loadGallery(){var c=document.getElementById('admin-gallery');if(!c)return;var h='<div class="admin-section-title"><i class="fas fa-images"></i> Galeri</div><div class="admin-upload-area" onclick="document.getElementById(\'gui\').click()"><i class="fas fa-cloud-upload-alt"></i><p>Upload foto galeri</p><input type="file" id="gui" accept="image/*" multiple style="display:none" onchange="AdminPanel.uploadGalleryImages(this)"></div><div class="admin-gallery-grid">';var imgs=gGI();if(imgs.length===0)h+='<p>Belum ada foto.</p>';else imgs.forEach(function(i){h+='<div class="admin-gallery-item"><img src="'+i.src+'"><div class="admin-gallery-item-overlay"><button onclick="AdminPanel.deleteGalleryImage('+i.id+')" class="admin-btn-danger"><i class="fas fa-trash"></i></button></div></div>'});h+='</div>';c.innerHTML=h}
-function uploadMemberPhoto(id,input){var f=input.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){sMP(id,e.target.result);showN('Foto diupload!');loadMembers()};r.readAsDataURL(f)}
-function uploadGalleryImages(input){Array.from(input.files).forEach(function(f){var r=new FileReader();r.onload=function(e){aGI(e.target.result,f.name.replace(/\.[^/.]+$/,'').replace(/[-_]/g,' '))};r.readAsDataURL(f)});input.value=''}
-function updateMemberBio(id,bio){sME(STORAGE_KEYS.memberBios,id,bio);showN('Bio diperbarui!')}
-function updateMemberRole(id,role){sME(STORAGE_KEYS.memberRoles,id,role);showN('Jabatan diperbarui!')}
-function showLoginModal(){var ex=document.getElementById('admin-login-modal');if(ex)ex.remove();var m=document.createElement('div');m.id='admin-login-modal';m.className='admin-login-modal';m.innerHTML='<div class="admin-login-overlay"></div><div class="admin-login-box"><div class="admin-login-icon"><i class="fas fa-crown"></i></div><h2>Owner Access</h2><form onsubmit="return AdminPanel.handleLogin(event)"><div class="admin-login-field"><label><i class="fas fa-lock"></i> Password</label><input type="password" id="login-password" placeholder="Masukkan password" required></div><div id="admin-login-error" class="admin-login-error" style="display:none"><i class="fas fa-exclamation-circle"></i> Password salah!</div><button type="submit" class="admin-login-btn" id="admin-login-btn"><i class="fas fa-shield-alt"></i> Masuk</button></form><p class="admin-login-footer"><i class="fas fa-lock"></i> Aman & rahasia</p></div>';document.body.appendChild(m);m.classList.add('active');setTimeout(function(){var el=document.getElementById('login-password');if(el)el.focus()},300)}
-function handleLogin(e){e.preventDefault();var p=document.getElementById('login-password').value;if(p==='own123'){document.getElementById('admin-login-modal').remove();showN('Selamat datang, Owner!');setTimeout(showAdminPanel,300)}else{document.getElementById('admin-login-error').style.display='block';document.getElementById('login-password').value='';document.getElementById('login-password').focus()}return false}
-document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.navbar-brand,.footer-logo').forEach(function(el){el.addEventListener('click',function(e){e.preventDefault();showLoginModal()})})});
-window.AdminPanel={showLogin:showLoginModal,handleLogin:handleLogin,logout:function(){hideAdminPanel();showN('Logout')},show:showAdminPanel,hide:hideAdminPanel,uploadMemberPhoto:uploadMemberPhoto,deleteMemberPhoto:dMP,updateMemberBio:updateMemberBio,updateMemberRole:updateMemberRole,uploadGalleryImages:uploadGalleryImages,deleteGalleryImage:dGI,isLoggedIn:function(){return false},getMemberPhotoFromStorage:gMPFS,getMemberBio:gMB,getMemberRole:gMR,getGalleryImages:gGI};
-console.log('%cOwner Panel Loaded','color:#ffd700;font-weight:bold');
-})();
+'use strict';
 
-// ===== TRIPLE TAP ADMIN ACCESS (Shandika) =====
-(function() {
-    var clickCount = 0;
-    var clickTimer = null;
-    
+// ===== FIREBASE REALTIME SETUP =====
+var db = null;
+function getDB() {
+    if (db) return db;
+    if (typeof firebase !== 'undefined' && firebase.database) {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.database();
+        return db;
+    }
+    return null;
+}
+
+// ===== ADMIN AUTH =====
+var PASSWORD = 'own123';
+function isLoggedIn() { return sessionStorage.getItem('rajawali_admin') === '1'; }
+function login(p) { return p === PASSWORD; }
+function setLoggedIn() { sessionStorage.setItem('rajawali_admin', '1'); }
+function logout() { sessionStorage.removeItem('rajawali_admin'); hideAdmin(); showNotif('Logout berhasil', 'info'); }
+
+// ===== FIREBASE CRUD =====
+function fbSave(path, data, cb) {
+    var d = getDB();
+    if (d) { d.ref(path).set(data).then(cb||function(){}); }
+}
+function fbRead(path, cb) {
+    var d = getDB();
+    if (d) { d.ref(path).on('value', function(s){ cb(s.val()); }); }
+}
+function fbDelete(path, cb) {
+    var d = getDB();
+    if (d) { d.ref(path).remove().then(cb||function(){}); }
+}
+
+// ===== MEMBER PHOTOS =====
+function getMemberPhoto(id, cb) {
+    fbRead('members/' + id + '/photo', cb);
+}
+function saveMemberPhoto(id, dataUrl) {
+    saveMemberPhoto('members/' + id + '/photo', dataUrl);
+}
+
+// ===== MEMBER BIOS =====
+function getMemberBio(id, cb) {
+    fbRead('members/' + id + '/bio', cb);
+}
+function saveMemberBio(id, text) {
+    fbSave('members/' + id + '/bio', text);
+}
+
+// ===== MEMBER ROLES =====
+function getMemberRole(id, cb) {
+    fbRead('members/' + id + '/role', cb);
+}
+function saveMemberRole(id, text) {
+    fbSave('members/' + id + '/role', text);
+}
+
+// ===== GALLERY =====
+function getGallery(cb) {
+    fbRead('gallery', cb);
+}
+function addGalleryImage(src, title) {
+    var id = 'img_' + Date.now();
+    fbSave('gallery/' + id, { src: src, title: title || 'Foto', date: Date.now() });
+}
+function deleteGalleryImage(id) {
+    fbDelete('gallery/' + id);
+}
+
+// ===== NOTIFICATION =====
+function showNotif(msg, type) {
+    type = type || 'success';
+    var el = document.createElement('div');
+    el.className = 'admin-notification admin-notification-' + type;
+    el.innerHTML = '<i class="fas fa-check-circle"></i><span>' + msg + '</span>';
+    document.body.appendChild(el);
+    el.classList.add('show');
+    setTimeout(function(){ el.remove(); }, 3000);
+}
+
+// ===== LOGIN MODAL =====
+function showLogin() {
+    var m = document.createElement('div');
+    m.id = 'admin-login-modal';
+    m.innerHTML = '<div class="admin-overlay" onclick="AdminPanel.hideLogin()"></div>' +
+        '<div class="admin-login-box">' +
+        '<h3><i class="fas fa-crown"></i> Owner Login</h3>' +
+        '<input id="admin-pass" type="password" placeholder="Password">' +
+        '<button onclick="AdminPanel.handleLogin()">Masuk</button>' +
+        '<p id="admin-login-error" style="color:#ff6b6b;display:none">Password salah!</p>' +
+        '</div>';
+    document.body.appendChild(m);
+    document.getElementById('admin-pass').focus();
+}
+function hideLogin() {
+    var m = document.getElementById('admin-login-modal');
+    if (m) m.remove();
+}
+function handleLogin() {
+    var p = document.getElementById('admin-pass').value;
+    if (login(p)) {
+        setLoggedIn();
+        hideLogin();
+        showAdmin();
+        showNotif('Login berhasil! Selamat datang, Owner 👑');
+    } else {
+        document.getElementById('admin-login-error').style.display = 'block';
+    }
+}
+
+// ===== ADMIN PANEL =====
+function showAdmin() {
+    var p = document.getElementById('admin-panel');
+    if (!p) p = createAdminPanel();
+    p.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadMembers();
+    loadGallery();
+}
+function hideAdmin() {
+    var p = document.getElementById('admin-panel');
+    if (p) { p.classList.remove('active'); document.body.style.overflow = ''; }
+}
+function createAdminPanel() {
+    var p = document.createElement('div');
+    p.id = 'admin-panel';
+    p.className = 'admin-panel';
+    p.innerHTML = '<div class="admin-overlay" onclick="AdminPanel.hide()"></div>' +
+        '<div class="admin-container">' +
+        '<div class="admin-header"><div class="admin-header-left"><div class="admin-logo-icon"><i class="fas fa-crown"></i></div><div><h3>Owner Dashboard</h3><small>Firebase Realtime</small></div></div>' +
+        '<div class="admin-header-right"><button class="admin-btn-icon" onclick="AdminPanel.logout()"><i class="fas fa-sign-out-alt"></i></button><button class="admin-btn-icon" onclick="AdminPanel.hide()"><i class="fas fa-times"></i></button></div></div>' +
+        '<div class="admin-tabs"><button class="admin-tab active" data-tab="members"><i class="fas fa-users"></i> Anggota</button><button class="admin-tab" data-tab="gallery"><i class="fas fa-images"></i> Galeri</button></div>' +
+        '<div class="admin-body"><div class="admin-tab-content active" id="admin-members"></div><div class="admin-tab-content" id="admin-gallery"></div></div>' +
+        '</div>';
+    document.body.appendChild(p);
+    p.querySelectorAll('.admin-tab').forEach(function(t) {
+        t.addEventListener('click', function() {
+            p.querySelectorAll('.admin-tab').forEach(function(x){ x.classList.remove('active'); });
+            p.querySelectorAll('.admin-tab-content').forEach(function(x){ x.classList.remove('active'); });
+            t.classList.add('active');
+            document.getElementById('admin-' + t.dataset.tab).classList.add('active');
+        });
+    });
+    return p;
+}
+
+// ===== LOAD MEMBERS =====
+function loadMembers() {
+    var el = document.getElementById('admin-members');
+    if (!el) return;
+    el.innerHTML = '<p style="color:#94a3b8"><i class="fas fa-sync"></i> Memuat dari Firebase...</p>';
+    if (typeof membersData === 'undefined') {
+        el.innerHTML = '<p>Data anggota belum dimuat. Refresh halaman.</p>';
+        return;
+    }
+    var html = '';
+    membersData.forEach(function(m, i) {
+        var initials = m.name.split(' ').map(function(n){ return n[0]; }).join('').substring(0,2);
+        html += '<div class="admin-member-item">' +
+            '<div class="admin-member-info"><strong>' + m.name + '</strong><br><small>' + m.role + '</small></div>' +
+            '<div class="admin-member-actions">' +
+            '<label class="admin-btn-small admin-btn-photo"><i class="fas fa-camera"></i> Foto<input type="file" accept="image/*" style="display:none" onchange="AdminPanel.uploadPhoto(' + i + ', this)"></label>' +
+            '<button class="admin-btn-small" onclick="AdminPanel.editBio(' + i + ')"><i class="fas fa-edit"></i> Bio</button>' +
+            '<button class="admin-btn-small" onclick="AdminPanel.editRole(' + i + ')"><i class="fas fa-user-tag"></i> Role</button>' +
+            '</div></div>';
+    });
+    el.innerHTML = html;
+}
+
+// ===== UPLOAD PHOTO =====
+function uploadPhoto(index, input) {
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var dataUrl = e.target.result;
+        fbSave('members/' + index + '/photo', dataUrl, function() {
+            showNotif('Foto berhasil di-upload ke Firebase! 📸');
+            loadMembers();
+            // Trigger refresh di page utama
+            if (typeof renderMembers === 'function') renderMembers();
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+// ===== EDIT BIO =====
+function editBio(index) {
+    var name = membersData[index].name;
+    var bio = prompt('Edit bio ' + name + ':', membersData[index].bio);
+    if (bio !== null) {
+        fbSave('members/' + index + '/bio', bio, function() {
+            showNotif('Bio berhasil diupdate! ✏️');
+            loadMembers();
+            if (typeof renderMembers === 'function') renderMembers();
+        });
+    }
+}
+
+// ===== EDIT ROLE =====
+function editRole(index) {
+    var name = membersData[index].name;
+    var role = prompt('Edit role ' + name + ':', membersData[index].role);
+    if (role !== null) {
+        fbSave('members/' + index + '/role', role, function() {
+            showNotif('Role berhasil diupdate! 🏷️');
+            loadMembers();
+            if (typeof renderMembers === 'function') renderMembers();
+        });
+    }
+}
+
+// ===== LOAD GALLERY =====
+function loadGallery() {
+    var el = document.getElementById('admin-gallery');
+    if (!el) return;
+    el.innerHTML = '<label class="admin-btn-small admin-btn-photo"><i class="fas fa-plus"></i> Tambah Foto<input type="file" accept="image/*" multiple style="display:none" onchange="AdminPanel.uploadGallery(this)"></label><div id="admin-gallery-list"></div>';
+    fbRead('gallery', function(data) {
+        var list = document.getElementById('admin-gallery-list');
+        if (!list) return;
+        if (!data) { list.innerHTML = '<p style="color:#94a3b8">Belum ada foto galeri</p>'; return; }
+        var html = '';
+        Object.keys(data).forEach(function(key) {
+            var img = data[key];
+            html += '<div class="admin-gallery-item"><img src="' + img.src.substring(0,100) + '..." style="width:60px;height:60px;object-fit:cover;border-radius:8px"><span>' + img.title + '</span><button onclick="AdminPanel.deleteGallery(\'' + key + '\')"><i class="fas fa-trash"></i></button></div>';
+        });
+        list.innerHTML = html;
+    });
+}
+
+// ===== UPLOAD GALLERY =====
+function uploadGallery(input) {
+    var files = input.files;
+    var count = 0;
+    Array.from(files).forEach(function(file) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            addGalleryImage(e.target.result, file.name);
+            count++;
+            if (count === files.length) {
+                showNotif(count + ' foto galeri ditambahkan! 🖼️');
+                loadGallery();
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ===== DELETE GALLERY =====
+function deleteGallery(id) {
+    if (confirm('Hapus foto ini?')) {
+        deleteGalleryImage(id);
+        showNotif('Foto galeri dihapus 🗑️');
+        loadGallery();
+    }
+}
+
+// ===== TRIPLE TAP ADMIN ACCESS =====
+(function(){
+    var taps = 0;
+    var timer = null;
     document.addEventListener('click', function(e) {
         var card = e.target.closest('.member-card');
-        if (!card) {
-            clickCount = 0;
-            return;
-        }
-        
-        // Cek apakah ini kartu Shandika (anggota ke-8)
-        var cardNumber = card.querySelector('.card-number');
-        if (cardNumber && cardNumber.textContent.trim() === '08') {
-            clickCount++;
-            
-            if (clickTimer) clearTimeout(clickTimer);
-            clickTimer = setTimeout(function() {
-                clickCount = 0;
-            }, 1000); // reset dalam 1 detik
-            
-            if (clickCount >= 3) {
-                clickCount = 0;
-                clearTimeout(clickTimer);
-                // Panggil login admin
-                if (typeof showLoginModal === 'function') {
-                    showLoginModal();
-                } else if (window.AdminPanel && typeof window.AdminPanel.showLogin === 'function') {
-                    window.AdminPanel.showLogin();
-                }
+        if (!card) { taps = 0; return; }
+        var num = card.querySelector('.card-number');
+        if (num && num.textContent.trim() === '08') {
+            taps++;
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(function(){ taps = 0; }, 1500);
+            if (taps >= 3) {
+                taps = 0;
+                clearTimeout(timer);
+                if (isLoggedIn()) { showAdmin(); }
+                else { showLogin(); }
             }
         }
     });
-    
-    console.log('%c👆 Triple-tap foto Shandika untuk admin!', 'color: #ffd700; font-size: 11px;');
+})();
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('%c👑 Admin Panel Loaded - Firebase Realtime', 'font-size:14px;font-weight:bold;color:#ffd700;');
+    console.log('%c🔐 Password: own123', 'font-size:11px;color:#94a3b8;');
+    console.log('%c👆 Triple-tap foto Shandika untuk admin!', 'font-size:11px;color:#00d4ff;');
+});
+
+// ===== EXPORT =====
+window.AdminPanel = {
+    showLogin: showLogin,
+    hideLogin: hideLogin,
+    handleLogin: handleLogin,
+    show: showAdmin,
+    hide: hideAdmin,
+    logout: logout,
+    uploadPhoto: uploadPhoto,
+    editBio: editBio,
+    editRole: editRole,
+    uploadGallery: uploadGallery,
+    deleteGallery: deleteGallery,
+    isLoggedIn: isLoggedIn
+};
+
 })();

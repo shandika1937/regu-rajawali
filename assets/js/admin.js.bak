@@ -28,3 +28,41 @@ document.addEventListener('DOMContentLoaded',function(){document.querySelectorAl
 window.AdminPanel={showLogin:showLoginModal,handleLogin:handleLogin,logout:function(){hideAdminPanel();showN('Logout')},show:showAdminPanel,hide:hideAdminPanel,uploadMemberPhoto:uploadMemberPhoto,deleteMemberPhoto:dMP,updateMemberBio:updateMemberBio,updateMemberRole:updateMemberRole,uploadGalleryImages:uploadGalleryImages,deleteGalleryImage:dGI,isLoggedIn:function(){return false},getMemberPhotoFromStorage:gMPFS,getMemberBio:gMB,getMemberRole:gMR,getGalleryImages:gGI};
 console.log('%cOwner Panel Loaded','color:#ffd700;font-weight:bold');
 })();
+
+// ===== TRIPLE TAP ADMIN ACCESS (Shandika) =====
+(function() {
+    var clickCount = 0;
+    var clickTimer = null;
+    
+    document.addEventListener('click', function(e) {
+        var card = e.target.closest('.member-card');
+        if (!card) {
+            clickCount = 0;
+            return;
+        }
+        
+        // Cek apakah ini kartu Shandika (anggota ke-8)
+        var cardNumber = card.querySelector('.card-number');
+        if (cardNumber && cardNumber.textContent.trim() === '08') {
+            clickCount++;
+            
+            if (clickTimer) clearTimeout(clickTimer);
+            clickTimer = setTimeout(function() {
+                clickCount = 0;
+            }, 1000); // reset dalam 1 detik
+            
+            if (clickCount >= 3) {
+                clickCount = 0;
+                clearTimeout(clickTimer);
+                // Panggil login admin
+                if (typeof showLoginModal === 'function') {
+                    showLoginModal();
+                } else if (window.AdminPanel && typeof window.AdminPanel.showLogin === 'function') {
+                    window.AdminPanel.showLogin();
+                }
+            }
+        }
+    });
+    
+    console.log('%c👆 Triple-tap foto Shandika untuk admin!', 'color: #ffd700; font-size: 11px;');
+})();

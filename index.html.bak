@@ -51,8 +51,6 @@
 
     <!-- ===== MAIN CSS ===== -->
     <link rel="stylesheet" href="assets/css/style.css">
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -787,9 +785,7 @@
                     .break-row td { color: #d97706; font-weight: 600; }
                     .footer { text-align: center; margin-top: 30px; color: #6b7280; }
                 </style>
-                <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-</head>
+                </head>
                 <body>
                     <h1>${scheduleTitle}</h1>
                     ${scheduleHTML}
