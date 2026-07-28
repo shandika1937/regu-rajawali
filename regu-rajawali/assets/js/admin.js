@@ -8,26 +8,7 @@
     // Username & password owner (RAHASIA - jangan dibagikan!)
     const OWNER_CONFIG = {
         username: 'owner',
-        // Hash: own123 -> digunakan untuk verifikasi
-        passwordHash: '9f7e2b5a4c8d1f3e6a0b2c4d6e8f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7'
-    };
-
-    // Simple hash function (SHA-256 like) untuk verifikasi password
-    async function hashPassword(password) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password + 'rajawali1_salt_2026');
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    // ========== LOCALSTORAGE KEYS ==========
-    const STORAGE_KEYS = {
-        memberPhotos: 'rajawali_member_photos',
-        galleryImages: 'rajawali_gallery_images',
-        memberBios: 'rajawali_member_bios',
-        memberRoles: 'rajawali_member_roles',
-        galleryData: 'rajawali_gallery_data'
+        password: 'own123'
     };
 
     // ========== SESSION MANAGEMENT ==========
@@ -35,10 +16,8 @@
         return sessionStorage.getItem('rajawali_owner') === 'authenticated';
     }
 
-    async function login(username, password) {
-        if (username !== OWNER_CONFIG.username) return false;
-        const hash = await hashPassword(password);
-        return hash === OWNER_CONFIG.passwordHash;
+    function login(username, password) {
+        return username === OWNER_CONFIG.username && password === OWNER_CONFIG.password;
     }
 
     function setLoggedIn() {
