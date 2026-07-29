@@ -849,6 +849,121 @@
                 });
             });
         }
-    </script>
+    
+
+// ===== ADMIN VIA URL #admin =====
+(function() {
+    // Cek apakah URL mengandung #admin atau ?admin
+    function checkAdminURL() {
+        var hash = window.location.hash;
+        var params = new URLSearchParams(window.location.search);
+        if (hash === '#admin' || params.get('admin') === '1' || hash === '#/admin') {
+            setTimeout(function() {
+                showAdminLogin();
+            }, 500);
+        }
+    }
+
+    // Tampilkan login modal admin
+    function showAdminLogin() {
+        // Cek apakah sudah login
+        if (sessionStorage.getItem('rajawali_admin') === '1') {
+            openAdminPanel();
+            return;
+        }
+
+        // Buat modal login
+        var modal = document.createElement('div');
+        modal.id = 'admin-login-modal';
+        modal.className = 'admin-login-modal active';
+        modal.innerHTML = '<div class="admin-login-overlay" onclick="this.parentElement.remove()"></div>' +
+            '<div class="admin-login-box">' +
+            '<div style="font-size:2.5rem;margin-bottom:12px">🔐</div>' +
+            '<h2>Admin Panel</h2>' +
+            '<p>Masukkan password untuk akses panel admin</p>' +
+            '<input type="password" id="admin-password-input" placeholder="Password..." autofocus>' +
+            '<button class="btn btn-primary" onclick="attemptAdminLogin()" id="admin-login-btn">' +
+            '<i class="fas fa-sign-in-alt"></i> Masuk</button>' +
+            '<p style="margin-top:12px;font-size:0.75rem;color:var(--text-muted)">' +
+            'Regu Rajawali 1 • Admin Only</p>' +
+            '</div>';
+        document.body.appendChild(modal);
+
+        // Enter key support
+        document.getElementById('admin-password-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') attemptAdminLogin();
+        });
+        document.getElementById('admin-password-input').focus();
+    }
+
+    // Coba login
+    window.attemptAdminLogin = function() {
+        var input = document.getElementById('admin-password-input');
+        var btn = document.getElementById('admin-login-btn');
+        if (!input) return;
+
+        var password = input.value.trim();
+        if (password === 'own123') {
+            sessionStorage.setItem('rajawali_admin', '1');
+            btn.innerHTML = '<i class="fas fa-check"></i> Berhasil!';
+            btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            setTimeout(function() {
+                var modal = document.getElementById('admin-login-modal');
+                if (modal) modal.remove();
+                openAdminPanel();
+            }, 600);
+        } else {
+            input.style.borderColor = 'var(--neon-red)';
+            input.value = '';
+            input.placeholder = 'Password salah! Coba lagi...';
+            setTimeout(function() {
+                input.style.borderColor = '';
+                input.placeholder = 'Password...';
+            }, 2000);
+        }
+    };
+
+    // Buka admin panel (placeholder - admin.js handle ini)
+    function openAdminPanel() {
+        if (typeof showLogin === 'function') {
+            showLogin();
+        } else if (typeof AdminPanel !== 'undefined' && typeof AdminPanel.showLogin === 'function') {
+            AdminPanel.showLogin();
+        }
+    }
+
+    // Floating admin button
+    function createAdminButton() {
+        var btn = document.createElement('a');
+        btn.href = '#admin';
+        btn.className = 'admin-fab';
+        btn.title = 'Admin Panel';
+        btn.innerHTML = '<i class="fas fa-shield-alt"></i>';
+        btn.style.cssText = 'position:fixed;bottom:80px;right:20px;width:48px;height:48px;border-radius:50%;' +
+            'background:rgba(15,31,58,0.9);border:1px solid rgba(255,215,0,0.3);color:#ffd700;' +
+            'display:flex;align-items:center;justify-content:center;font-size:1.1rem;z-index:999;' +
+            'text-decoration:none;box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:all 0.3s;' +
+            'backdrop-filter:blur(10px);';
+        btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1)';
+            this.style.borderColor = 'rgba(255,215,0,0.6)';
+            this.style.boxShadow = '0 4px 30px rgba(255,215,0,0.2)';
+        });
+        btn.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+            this.style.borderColor = 'rgba(255,215,0,0.3)';
+            this.style.boxShadow = '0 4px 20px rgba(0,0,0,0.4)';
+        });
+        document.body.appendChild(btn);
+    }
+
+    // Init
+    checkAdminURL();
+    createAdminButton();
+
+    // Dengarkan hash change
+    window.addEventListener('hashchange', checkAdminURL);
+})();
+</script>
 </body>
 </html>
