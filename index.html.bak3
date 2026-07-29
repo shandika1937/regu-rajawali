@@ -646,7 +646,7 @@
             img.onerror = null;
             img.style.display = "none";
             var ph = document.createElement("div");
-            ph.className = "member-photo-placeholder" data-member-img="${m.id}";
+            ph.className = "member-photo-placeholder";
             ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
             img.parentElement.appendChild(ph);
         }
@@ -683,7 +683,7 @@
                     <div class="member-photo-wrapper">
                         <img class="member-photo" src="${photoSrc}" 
                              alt="${member.name}" 
-                             onerror="handlePhotoError(this)" data-member-img="${m.id}"
+                             onerror="handlePhotoError(this)"
                              loading="lazy">
                     </div>
                     <div class="member-role">${roleText}</div>
@@ -708,7 +708,7 @@
             img.onerror = null;
             img.style.display = "none";
             var ph = document.createElement("div");
-            ph.className = "member-photo-placeholder" data-member-img="${m.id}";
+            ph.className = "member-photo-placeholder";
             ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
             img.parentElement.appendChild(ph);
         }
@@ -721,7 +721,7 @@
             img.onerror = null;
             img.style.display = "none";
             var ph = document.createElement("div");
-            ph.className = "member-photo-placeholder" data-member-img="${m.id}";
+            ph.className = "member-photo-placeholder";
             ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
             img.parentElement.appendChild(ph);
         }
@@ -853,7 +853,7 @@
             img.onerror = null;
             img.style.display = "none";
             var ph = document.createElement("div");
-            ph.className = "member-photo-placeholder" data-member-img="${m.id}";
+            ph.className = "member-photo-placeholder";
             ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
             img.parentElement.appendChild(ph);
         }
