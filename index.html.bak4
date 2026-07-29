@@ -647,7 +647,10 @@
             img.parentElement.appendChild(ph);
         }
 
-        
+        // ========== RENDER MEMBERS (with admin photo support) ==========";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
         document.addEventListener('DOMContentLoaded', function() {
             renderMembers();
         });
@@ -701,11 +704,19 @@
             }
         }
 
-                document.addEventListener('memberPhotoUpdated', function() {
+        // Listen for admin updates to re-render members";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
+        document.addEventListener('memberPhotoUpdated', function() {
             renderMembers();
         });
 
-                document.addEventListener('DOMContentLoaded', function() {
+        // ========== SCHEDULE RENDERER ==========";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
+        document.addEventListener('DOMContentLoaded', function() {
             const scheduleBody = document.getElementById('schedule-body');
             const tabs = document.querySelectorAll('.schedule-tab');
             let activeDay = 'SENIN';
@@ -827,7 +838,11 @@
             }, 1500);
         }
 
-                document.addEventListener('DOMContentLoaded', function() {
+        // ========== INIT AOS ==========";
+            ph.textContent = img.alt ? img.alt.substring(0,2) : "??";
+            img.parentElement.appendChild(ph);
+        }
+        document.addEventListener('DOMContentLoaded', function() {
             if (typeof AOS !== 'undefined') {
                 AOS.init({
                     duration: 800,
