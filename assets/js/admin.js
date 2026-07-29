@@ -62,10 +62,11 @@ function saveMemberPhoto(id, dataUrl) {
         .then(function(){
             showNotif('Foto ' + id + ' tersimpan! 📸', 'success');
             // Update semua gambar di halaman
-            var imgs = document.querySelectorAll('[data-member-img="' + id + '"]');
+            var imgs = document.querySelectorAll('[data-member-id="member-' + id + '"]');
             imgs.forEach(function(img){ img.src = dataUrl; });
             var aimgs = document.querySelectorAll('[data-admin-img="' + id + '"]');
             aimgs.forEach(function(img){ img.src = dataUrl; });
+            if (typeof renderMembers === 'function') { renderMembers(); }
         })
         .catch(function(e){ showNotif('Gagal: '+e.message, 'error'); });
 }
@@ -412,7 +413,7 @@ function setupFirebaseSync() {
                 // Update photo
                 if (fb.photo) {
                     m.photo = fb.photo;
-                    var imgs = document.querySelectorAll('[data-member-img="' + m.id + '"]');
+                    var imgs = document.querySelectorAll('[data-member-id="member-' + m.id + '"]');
                     imgs.forEach(function(img){ img.src = fb.photo; });
                 }
                 // Update bio
@@ -438,6 +439,8 @@ function setupFirebaseSync() {
             window.galleryData = fbGallery;
             window.renderGallery();
         }
+    });
+        if (typeof renderMembers === 'function') { renderMembers(); }
     });
 }
 
